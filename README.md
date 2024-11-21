@@ -45,6 +45,6 @@ Hệ thống tưới cây thông minh là một giải pháp nhằm tự động
 ---
 
 ## 6. Sơ đồ khối dự kiến
-![SmartIrrigationSystem](./SmartIrrigationSystem.png)
+![SmartIrrigationSystem](https://github.com/user-attachments/assets/741582ac-1455-414a-8a2c-3896455004f1)
 
 ---
