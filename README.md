@@ -1,4 +1,4 @@
-Hệ thống tưới cây thông minh
+# Hệ thống tưới cây thông minh
 1. Giới thiệu
 Hệ thống tưới cây thông minh là một giải pháp nhằm tự động hóa việc tưới tiêu cho cây trồng. Hệ thống sử dụng cảm biến độ ẩm đất để theo dõi tình trạng đất và tự động kích hoạt bơm nước khi đất khô. Ngoài ra, người dùng có thể theo dõi và điều khiển hệ thống thông qua giao diện Dashboard trên Node-RED, hỗ trợ điều khiển từ xa bằng điện thoại thông minh hoặc máy tính.
 
