@@ -1,0 +1,92 @@
+#include <Arduino.h>
+
+#include "wifi_connect.h"
+#include <WiFiClientSecure.h>
+#include "ca_cert.h"
+
+#include <PubSubClient.h>
+#include <Ticker.h>
+
+float temperature = 0;
+float humidity = 0;
+
+#define MT 34      // Chân kết nối DHT11
+#define RL 25  // Loại cảm biến
+namespace {
+    const char *ssid = "Wokwi-GUEST";
+    const char *password = "";
+    const char *Hum_topic = "Hum";
+    const char *RELAY = "Relay";
+    unsigned int publish_count = 0;
+    uint16_t keepAlive = 15;    // seconds (default is 15)
+    uint16_t socketTimeout = 5; // seconds (default is 15)
+}
+
+WiFiClientSecure tlsClient;
+PubSubClient mqttClient(tlsClient);
+
+Ticker mqttPulishTicker;
+
+void mqttTempsensorPublish()
+{
+    humidity = analogRead(34);
+    Serial.println(humidity);
+    // Đăng tải thông tin nhiệt độ và độ ẩm lên MQTT
+    mqttClient.publish(Hum_topic, String(humidity).c_str(), false);
+}
+
+void mqttCallback(char *topic, byte *payload, unsigned int length)
+{
+    if (strcmp(topic, RELAY) == 0)
+    {
+        char commandStr[length + 1];
+        memcpy(commandStr, payload, length);
+        commandStr[length] = '\0';
+        int command = atoi(commandStr);  // Chuyển đổi từ chuỗi sang giá trị số
+        digitalWrite(25, command);
+    }
+}
+
+void mqttReconnect()
+{
+    while (!mqttClient.connected())
+    {
+        Serial.println("Attempting MQTT connection...");
+        String client_id = "esp32-client-";
+        client_id += String(WiFi.macAddress());
+        if (mqttClient.connect(client_id.c_str(), "DuyPham", "Kd12345678"))
+        {
+            Serial.print(client_id);
+            Serial.println(" connected");
+            mqttClient.subscribe(RELAY);
+        }
+        else
+        {
+            Serial.print("MQTT connect failed, rc=");
+            Serial.print(mqttClient.state());
+            Serial.println(" try again in 1 seconds");
+            delay(1000);
+        }
+    }
+}
+
+void setup()
+{
+    Serial.begin(115200);
+    delay(10);
+    setup_wifi(ssid, password);
+    tlsClient.setCACert(ca_cert);
+
+    mqttClient.setCallback(mqttCallback);
+    mqttClient.setServer("47a5763167324520891dd080bd6321d7.s1.eu.hivemq.cloud", 8883);
+    mqttPulishTicker.attach(1, mqttTempsensorPublish);  // Đặt thời gian cập nhật nhiệt độ và độ ẩm
+}
+
+void loop()
+{
+    if (!mqttClient.connected())
+    {
+        mqttReconnect();
+    }
+    mqttClient.loop();  // Lắng nghe các tin nhắn MQTT
+}
